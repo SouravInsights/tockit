@@ -2,36 +2,61 @@
 
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Tockit } from "@/registry/tockit";
 
 export default function BasicExample() {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Callback to track TOC collapse state
+  const handleCollapseChange = (collapsed: boolean) => {
+    setIsCollapsed(collapsed);
+  };
+
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: "var(--background)" }}
+    >
       <div className="max-w-6xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold mb-8 text-amber-800 border-b border-amber-200 pb-2">
+        <h1
+          className="text-3xl font-bold mb-8"
+          style={{
+            color: "#92400e",
+            borderBottom: "1px solid var(--card-border)",
+            paddingBottom: "0.5rem",
+          }}
+        >
           Tockit Example
         </h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar with Table of Contents */}
           <div className="lg:w-1/4 lg:sticky lg:top-4 lg:self-start">
-            <div className="bg-white p-5 rounded-lg shadow-sm border border-amber-200">
-              <h3 className="text-lg font-medium mb-4 text-amber-800">
-                On this page
-              </h3>
-              <Tockit
-                contentSelector="#example-content"
-                className="text-gray-700 [&_a:hover]:text-amber-700 [&_a.active]:text-amber-700 [&_a.active]:font-medium"
-              />
-            </div>
+            <Tockit
+              contentSelector="#example-content"
+              collapsible={true}
+              defaultCollapsed={false}
+              onCollapseChange={handleCollapseChange}
+            />
           </div>
 
           {/* Main Content */}
-          <div className="lg:w-3/4">
+          <div
+            className={`lg:w-${
+              isCollapsed ? "11/12" : "3/4"
+            } transition-all duration-300`}
+          >
             <div
               id="example-content"
-              className="tockit-prose bg-white p-8 rounded-lg shadow-sm border border-amber-200"
+              className="tockit-prose"
+              style={{
+                background: "var(--card-background)",
+                padding: "2rem",
+                borderRadius: "0.5rem",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                border: "1px solid var(--card-border)",
+              }}
             >
               <h2>What's Tockit?</h2>
               <p>

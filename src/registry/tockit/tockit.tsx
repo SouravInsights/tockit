@@ -6,9 +6,20 @@ const Tockit: React.FC<TockitProps> = ({
   contentSelector,
   maxDepth = 3,
   className = "",
+  collapsible = false,
+  defaultCollapsed = false,
+  onCollapseChange,
 }) => {
   const [tableOfContents, setTableOfContents] = useState<TOCItem[]>([]);
   const [activeHeading, setActiveHeading] = useState<string>("");
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
+  // Notify parent component when collapsed state changes
+  useEffect(() => {
+    if (onCollapseChange) {
+      onCollapseChange(isCollapsed);
+    }
+  }, [isCollapsed, onCollapseChange]);
 
   // Extract headings from content
   useEffect(() => {
@@ -90,42 +101,169 @@ const Tockit: React.FC<TockitProps> = ({
     };
   }, [tableOfContents]);
 
+  // Toggle collapsed state
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   // If no headings are found, don't render anything
   if (tableOfContents.length === 0) {
     return null;
   }
 
-  return (
-    <div className={`tockit ${className}`}>
-      <nav aria-label="Table of contents">
-        <ul className="space-y-1">
-          {tableOfContents.map((heading) => (
-            <li
-              key={heading.id}
-              style={{
-                paddingLeft: `${(heading.level - 1) * 0.75}rem`,
-              }}
+  if (collapsible && isCollapsed) {
+    // Collapsed View - Elegant tab design
+    return (
+      <div
+        className={`tockit-collapsed ${className} mx-auto w-12 bg-white h-auto rounded-md border border-amber-200 shadow-sm overflow-hidden`}
+      >
+        <div
+          onClick={toggleCollapse}
+          className="h-full py-6 flex flex-col items-center justify-between cursor-pointer hover:bg-amber-50 transition-colors duration-200"
+          title="Expand table of contents"
+        >
+          <div className="flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-gray-500"
             >
-              <a
-                href={`#${heading.id}`}
-                className={`block py-1 text-sm ${
-                  activeHeading === heading.id
-                    ? "font-medium text-blue-600"
-                    : "text-gray-700 hover:text-blue-600"
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </div>
+          <div className="flex flex-col items-center pt-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-gray-500 mb-3"
+            >
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg>
+
+            {/* Small dots to indicate there are multiple items */}
+            <div className="flex flex-col space-y-1.5">
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${
+                  activeHeading ? "bg-amber-500" : "bg-gray-300"
                 }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById(heading.id)?.scrollIntoView({
-                    behavior: "smooth",
-                  });
+              ></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
+            </div>
+          </div>
+          <div className="h-5"></div> {/* Empty spacer for balance */}
+        </div>
+      </div>
+    );
+  }
+
+  // Expanded View
+  return (
+    <div
+      className={`tockit ${className} w-full bg-white rounded-lg border border-amber-200 overflow-hidden shadow-sm`}
+    >
+      {/* TOC Header */}
+      <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center">
+          <div className="flex space-x-2 mr-3">
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          </div>
+          <span className="font-mono text-sm text-gray-600">
+            table-of-contents.md
+          </span>
+        </div>
+
+        {/* Toggle button */}
+        {collapsible && (
+          <button
+            onClick={toggleCollapse}
+            className="p-1.5 rounded-md hover:bg-amber-100 text-gray-700 transition-colors flex items-center"
+            aria-label="Collapse table of contents"
+          >
+            <span className="text-xs mr-1 text-gray-500">Collapse</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-gray-500"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* TOC Content */}
+      <div className="p-4">
+        <nav className="overflow-y-auto max-h-[70vh] font-mono">
+          <ul className="space-y-1">
+            {tableOfContents.map((heading) => (
+              <li
+                key={heading.id}
+                style={{
+                  marginLeft: `${(heading.level - 1) * 0.75}rem`,
                 }}
               >
-                {heading.text}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+                <a
+                  href={`#${heading.id}`}
+                  className={`text-sm hover:text-amber-600 transition-colors flex items-center py-1 truncate ${
+                    activeHeading === heading.id
+                      ? "text-amber-600 font-medium"
+                      : "text-gray-700"
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById(heading.id)?.scrollIntoView({
+                      behavior: "smooth",
+                    });
+                  }}
+                >
+                  {activeHeading === heading.id && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="mr-1 flex-shrink-0"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  )}
+                  <span className="truncate">{heading.text}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
     </div>
   );
 };

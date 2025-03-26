@@ -29,4 +29,21 @@ export interface TockitProps {
    * CSS class for the container
    */
   className?: string;
+
+  /**
+   * Whether the TOC should be collapsible
+   * @default false
+   */
+  collapsible?: boolean;
+
+  /**
+   * Default collapsed state
+   * @default false
+   */
+  defaultCollapsed?: boolean;
+
+  /**
+   * Callback when collapsed state changes
+   */
+  onCollapseChange?: (collapsed: boolean) => void;
 }
